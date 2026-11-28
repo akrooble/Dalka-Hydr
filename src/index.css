@@ -1,1 +1,59 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+  --color-brand-primary: #4648d4;
+  --color-brand-bright: #6366f1;
+  --color-brand-hover: #4f46e5;
+  --color-surface-canvas: #f8f9ff;
+  --color-surface-low: #eff4ff;
+  --color-surface-card: #ffffff;
+  --color-ink-primary: #0b1c30;
+  --color-ink-secondary: #464554;
+  --color-ink-muted: #64748b;
+  --color-border-hairline: #e2e8f0;
+  --color-status-emerald: #006c49;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    background-color: var(--color-surface-canvas);
+    color: var(--color-ink-primary);
+    scroll-behavior: smooth;
+  }
+
+  html.dark {
+    background-color: #0d1117;
+    color: #f1f5f9;
+    color-scheme: dark;
+  }
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+.font-bento {
+  font-family: "Outfit", var(--font-sans);
+}
+
+.font-editorial {
+  font-family: "Fraunces", Georgia, serif;
+}
+

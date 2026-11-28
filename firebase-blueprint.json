@@ -1,0 +1,254 @@
+{
+  "entities": {
+    "Job": {
+      "title": "Job",
+      "description": "A job listing published on Dalka Jobs with external link or hiring email application.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "minLength": 2, "maxLength": 160 },
+        "company": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "location": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "deadline": { "type": "string", "minLength": 4, "maxLength": 40 },
+        "category": { "type": "string", "minLength": 2, "maxLength": 80 },
+        "salary": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "employmentType": { "type": "string", "enum": ["Full-time", "Part-time", "Contract", "Internship", "Consultancy"] },
+        "description": { "type": "string", "minLength": 10, "maxLength": 6000 },
+        "externalUrl": { "type": "string", "maxLength": 500 },
+        "applyEmail": { "type": "string", "maxLength": 160 },
+        "logoUrl": { "type": "string", "maxLength": 65536 },
+        "status": { "type": "string", "enum": ["active", "closed"] },
+        "featured": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "company", "location", "deadline", "category", "salary", "employmentType", "description", "status", "featured", "createdAt", "updatedAt"]
+    },
+    "Tender": {
+      "title": "Tender",
+      "description": "A procurement or institutional tender notice on Dalka Jobs.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "minLength": 2, "maxLength": 180 },
+        "organization": { "type": "string", "minLength": 2, "maxLength": 140 },
+        "location": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "deadline": { "type": "string", "minLength": 4, "maxLength": 40 },
+        "category": { "type": "string", "minLength": 2, "maxLength": 80 },
+        "budget": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "referenceNo": { "type": "string", "minLength": 2, "maxLength": 60 },
+        "description": { "type": "string", "minLength": 10, "maxLength": 6000 },
+        "externalUrl": { "type": "string", "maxLength": 500 },
+        "applyEmail": { "type": "string", "maxLength": 160 },
+        "logoUrl": { "type": "string", "maxLength": 65536 },
+        "status": { "type": "string", "enum": ["open", "awarded", "closed"] },
+        "featured": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "organization", "location", "deadline", "category", "budget", "referenceNo", "description", "status", "featured", "createdAt", "updatedAt"]
+    },
+    "MarketplaceItem": {
+      "title": "MarketplaceItem",
+      "description": "Digital goods, books, or small e-commerce items listed on Dalka Jobs.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "minLength": 2, "maxLength": 140 },
+        "category": { "type": "string", "enum": ["digital_good", "book", "ecommerce"] },
+        "price": { "type": "number" },
+        "currency": { "type": "string", "minLength": 3, "maxLength": 6 },
+        "description": { "type": "string", "minLength": 10, "maxLength": 4000 },
+        "imageUrl": { "type": "string", "maxLength": 500 },
+        "deliveryNote": { "type": "string", "maxLength": 200 },
+        "inStock": { "type": "boolean" },
+        "featured": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["published", "draft"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "category", "price", "currency", "description", "inStock", "featured", "status", "createdAt", "updatedAt"]
+    },
+    "BlogPost": {
+      "title": "BlogPost",
+      "description": "Career, tender, and market insight article published on Dalka Jobs.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "minLength": 4, "maxLength": 180 },
+        "slug": { "type": "string", "minLength": 2, "maxLength": 140, "pattern": "^[a-z0-9-]+$" },
+        "category": { "type": "string", "minLength": 2, "maxLength": 80 },
+        "author": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "excerpt": { "type": "string", "minLength": 10, "maxLength": 400 },
+        "content": { "type": "string", "minLength": 20, "maxLength": 15000 },
+        "coverImage": { "type": "string", "maxLength": 500 },
+        "readTime": { "type": "string", "minLength": 2, "maxLength": 30 },
+        "status": { "type": "string", "enum": ["published", "draft"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "slug", "category", "author", "excerpt", "content", "readTime", "status", "createdAt", "updatedAt"]
+    },
+    "SiteSettings": {
+      "title": "SiteSettings",
+      "description": "Public contact placeholders, about copy, and footer layout editable via Admin Panel.",
+      "type": "object",
+      "properties": {
+        "brandName": { "type": "string", "minLength": 2, "maxLength": 80 },
+        "tagline": { "type": "string", "minLength": 4, "maxLength": 240 },
+        "email": { "type": "string", "minLength": 5, "maxLength": 160 },
+        "phone": { "type": "string", "minLength": 5, "maxLength": 40 },
+        "whatsapp": { "type": "string", "maxLength": 40 },
+        "address": { "type": "string", "minLength": 4, "maxLength": 240 },
+        "officeHours": { "type": "string", "minLength": 4, "maxLength": 120 },
+        "aboutMission": { "type": "string", "minLength": 10, "maxLength": 2000 },
+        "aboutStory": { "type": "string", "minLength": 10, "maxLength": 4000 },
+        "footerNewsletterTitle": { "type": "string", "maxLength": 120 },
+        "footerNewsletterSubtitle": { "type": "string", "maxLength": 240 },
+        "footerAboutTitle": { "type": "string", "maxLength": 80 },
+        "footerAboutText": { "type": "string", "maxLength": 500 },
+        "footerCol2Title": { "type": "string", "maxLength": 60 },
+        "footerCol2Links": { "type": "array", "description": "Up to 8 footer links (label + href)." },
+        "footerCol3Title": { "type": "string", "maxLength": 60 },
+        "footerCol3Links": { "type": "array", "description": "Up to 8 footer links (label + href)." },
+        "footerCol4Title": { "type": "string", "maxLength": 60 },
+        "footerCol4Links": { "type": "array", "description": "Up to 8 footer links (label + href)." },
+        "footerConnectTitle": { "type": "string", "maxLength": 60 },
+        "socialLinkedin": { "type": "string", "maxLength": 300 },
+        "socialTwitter": { "type": "string", "maxLength": 300 },
+        "socialFacebook": { "type": "string", "maxLength": 300 },
+        "socialInstagram": { "type": "string", "maxLength": 300 },
+        "socialYoutube": { "type": "string", "maxLength": 300 },
+        "footerCopyright": { "type": "string", "maxLength": 200 },
+        "homeHeroEyebrow": { "type": "string", "maxLength": 120 },
+        "homeHeroTitle": { "type": "string", "maxLength": 200 },
+        "homeHeroSubtitle": { "type": "string", "maxLength": 500 },
+        "homeSearchPlaceholder": { "type": "string", "maxLength": 120 },
+        "homeHeroImageUrl": { "type": "string", "maxLength": 262144 },
+        "homeHeroOverlayTitle": { "type": "string", "maxLength": 120 },
+        "homeHeroOverlaySubtitle": { "type": "string", "maxLength": 260 },
+        "siteLogoLightUrl": { "type": "string", "maxLength": 65536 },
+        "siteLogoDarkUrl": { "type": "string", "maxLength": 65536 },
+        "siteFaviconUrl": { "type": "string", "maxLength": 65536 },
+        "siteTheme": { "type": "string", "enum": ["classic", "modern_bento", "swiss_editorial"] },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["brandName", "tagline", "email", "phone", "address", "officeHours", "aboutMission", "aboutStory", "updatedAt"]
+    },
+    "NewsletterSubscriber": {
+      "title": "NewsletterSubscriber",
+      "description": "Email subscribers collected from the footer newsletter bar.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "minLength": 5, "maxLength": 160 },
+        "source": { "type": "string", "enum": ["footer"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "source", "createdAt"]
+    },
+    "VisitorLead": {
+      "title": "VisitorLead",
+      "description": "Visitor name, phone number, and optional location, email, and higher education collected from Contacts or Marketplace.",
+      "type": "object",
+      "properties": {
+        "fullName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "phone": { "type": "string", "minLength": 5, "maxLength": 32 },
+        "location": { "type": "string", "maxLength": 120 },
+        "email": { "type": "string", "maxLength": 160 },
+        "higherEducation": { "type": "string", "maxLength": 120 },
+        "source": { "type": "string", "enum": ["contacts", "marketplace"] },
+        "itemId": { "type": "string", "maxLength": 128 },
+        "itemTitle": { "type": "string", "maxLength": 160 },
+        "message": { "type": "string", "maxLength": 2000 },
+        "status": { "type": "string", "enum": ["new", "contacted"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["fullName", "phone", "source", "status", "createdAt"]
+    },
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Authorized team member record keyed by Firebase Auth UID with assigned role and granular permissions.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "minLength": 5, "maxLength": 160 },
+        "displayName": { "type": "string", "maxLength": 80 },
+        "role": { "type": "string", "enum": ["super_admin", "editor", "recruiter", "moderator", "custom", "admin"] },
+        "permissions": { "type": "array", "description": "Allowlisted permission keys assigned to this admin member." },
+        "status": { "type": "string", "enum": ["active", "suspended"] },
+        "inviteId": { "type": "string", "maxLength": 128 },
+        "invitedBy": { "type": "string", "maxLength": 160 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "role", "permissions", "status", "createdAt", "updatedAt"]
+    },
+    "TeamInvite": {
+      "title": "TeamInvite",
+      "description": "Pre-assigned role and permission invite keyed by deterministic email ID, claimed atomically upon verified login.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "minLength": 5, "maxLength": 160 },
+        "displayName": { "type": "string", "maxLength": 80 },
+        "role": { "type": "string", "enum": ["super_admin", "editor", "recruiter", "moderator", "custom"] },
+        "permissions": { "type": "array", "description": "Allowlisted permission keys assigned when invited." },
+        "status": { "type": "string", "enum": ["pending", "claimed", "revoked"] },
+        "invitedBy": { "type": "string", "minLength": 5, "maxLength": 160 },
+        "claimedUid": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "role", "permissions", "status", "invitedBy", "createdAt", "updatedAt"]
+    },
+    "AccessRequest": {
+      "title": "AccessRequest",
+      "description": "Pending account signup waiting for a Super Admin to assign a role and permissions.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "minLength": 5, "maxLength": 160 },
+        "displayName": { "type": "string", "maxLength": 80 },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "status", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/jobs/{jobId}": {
+      "schema": { "$ref": "#/entities/Job" },
+      "description": "Public job postings managed by admins with jobs permission."
+    },
+    "/tenders/{tenderId}": {
+      "schema": { "$ref": "#/entities/Tender" },
+      "description": "Public tender notices managed by admins with tenders permission."
+    },
+    "/marketplaceItems/{itemId}": {
+      "schema": { "$ref": "#/entities/MarketplaceItem" },
+      "description": "Marketplace digital goods, books, and e-commerce products."
+    },
+    "/blogs/{blogId}": {
+      "schema": { "$ref": "#/entities/BlogPost" },
+      "description": "Published blog articles and guides."
+    },
+    "/siteSettings/{settingId}": {
+      "schema": { "$ref": "#/entities/SiteSettings" },
+      "description": "Editable site contact details, about page copy, and footer settings."
+    },
+    "/visitorLeads/{leadId}": {
+      "schema": { "$ref": "#/entities/VisitorLead" },
+      "description": "PII-isolated visitor submissions from Contacts and Marketplace forms."
+    },
+    "/newsletterSubscribers/{subId}": {
+      "schema": { "$ref": "#/entities/NewsletterSubscriber" },
+      "description": "PII-isolated email newsletter subscriptions from the footer."
+    },
+    "/admins/{adminId}": {
+      "schema": { "$ref": "#/entities/AdminUser" },
+      "description": "Active and suspended team admin records with roles and granular permissions."
+    },
+    "/teamInvites/{inviteId}": {
+      "schema": { "$ref": "#/entities/TeamInvite" },
+      "description": "Pending staff role invitations claimed atomically upon verified authentication."
+    },
+    "/accessRequests/{requestId}": {
+      "schema": { "$ref": "#/entities/AccessRequest" },
+      "description": "Newly created user accounts awaiting role assignment by a Super Admin."
+    }
+  }
+}

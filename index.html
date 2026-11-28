@@ -3,16 +3,38 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Google AI Studio App</title>
-    <meta name="description" content="An application built with Google AI Studio." />
-    <meta property="og:title" content="My Google AI Studio App" />
-    <meta property="og:description" content="An application built with Google AI Studio." />
+    <title>Dalka Jobs — Jobs, Tenders & Marketplace</title>
+    <meta name="description" content="Jobs, institutional tenders, digital marketplace, and career insights for Dalka Jobs." />
+    <meta property="og:title" content="Dalka Jobs — Jobs, Tenders & Marketplace" />
+    <meta property="og:description" content="Jobs, institutional tenders, digital marketplace, and career insights for Dalka Jobs." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#4648D4" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Dalka Jobs" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="icon" type="image/png" href="/pwa-192x192.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <script>
+      try {
+        var isPreview = location.pathname.indexOf('/__preview') === 0;
+        var useDark = isPreview
+          ? location.search.indexOf('mode=dark') !== -1
+          : localStorage.getItem('dalka-theme') === 'dark';
+        if (useDark) {
+          document.documentElement.classList.add('dark');
+          document.documentElement.style.colorScheme = 'dark';
+        }
+      } catch (e) {}
+    </script>
   </head>
-  <body>
+  <body class="bg-[#F8F9FF] text-[#0B1C30] dark:bg-[#0D1117] dark:text-[#F1F5F9] antialiased selection:bg-[#E1E0FF] selection:text-[#07006C] dark:selection:bg-[#4648D4]/40 dark:selection:text-white">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-

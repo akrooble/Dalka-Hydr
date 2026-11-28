@@ -1,6 +1,8 @@
 {
-  "name": "",
-  "description": "",
+  "name": "Dalka Jobs",
+  "description": "Jobs, institutional tenders, digital marketplace, and career insights for Dalka Jobs.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

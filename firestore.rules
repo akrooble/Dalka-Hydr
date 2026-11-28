@@ -1,0 +1,537 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isVerifiedBootstrapAdmin() {
+      return isVerifiedUser() && request.auth.token.email == 'akrooble@gmail.com';
+    }
+
+    function hasAdminDoc() {
+      return isVerifiedUser() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function adminDoc() {
+      return get(/databases/$(database)/documents/admins/$(request.auth.uid)).data;
+    }
+
+    function isActiveAdmin() {
+      return isVerifiedBootstrapAdmin() || (
+        hasAdminDoc() && (
+          ('status' in adminDoc() && adminDoc().status == 'active') ||
+          (!('status' in adminDoc()) && adminDoc().role == 'admin')
+        )
+      );
+    }
+
+    function isSuperAdmin() {
+      return isVerifiedBootstrapAdmin() || (
+        isActiveAdmin() &&
+        (adminDoc().role == 'super_admin' || adminDoc().role == 'admin')
+      );
+    }
+
+    function hasPermission(perm) {
+      return isSuperAdmin() || (
+        isActiveAdmin() &&
+        'permissions' in adminDoc() &&
+        perm in adminDoc().permissions
+      );
+    }
+
+    function isTeamManager() {
+      return hasPermission('team');
+    }
+
+    function canAssignRole(role, perms) {
+      return (role != 'super_admin' && !('team' in perms)) || isSuperAdmin();
+    }
+
+    function isOptionalString(data, field, maxLen) {
+      return !(field in data) || (data[field] is string && data[field].size() <= maxLen);
+    }
+
+    function isValidPermissionsList(perms) {
+      return perms is list &&
+        perms.size() >= 1 &&
+        perms.size() <= 10 &&
+        perms.hasOnly([
+          'overview', 'jobs', 'tenders', 'marketplace', 'blogs',
+          'leads', 'newsletter', 'contacts', 'footer', 'team'
+        ]);
+    }
+
+    function isValidFooterLinkItem(item) {
+      return item is map &&
+        item.keys().hasAll(['label', 'href']) &&
+        item.keys().hasOnly(['label', 'href']) &&
+        item.label is string && item.label.size() >= 1 && item.label.size() <= 60 &&
+        item.href is string && item.href.size() >= 1 && item.href.size() <= 300;
+    }
+
+    function isOptionalFooterLinks(data, field) {
+      return !(field in data) || (
+        data[field] is list &&
+        data[field].size() <= 8 &&
+        (data[field].size() == 0 || isValidFooterLinkItem(data[field][0]))
+      );
+    }
+
+    function isValidJob(data) {
+      return data.keys().hasAll([
+        'title', 'company', 'location', 'deadline', 'category',
+        'salary', 'employmentType', 'description', 'status',
+        'featured', 'createdAt', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'title', 'company', 'location', 'deadline', 'category',
+        'salary', 'employmentType', 'description', 'externalUrl',
+        'applyEmail', 'logoUrl', 'status', 'featured', 'createdAt', 'updatedAt'
+      ]) &&
+      data.title is string && data.title.size() >= 2 && data.title.size() <= 160 &&
+      data.company is string && data.company.size() >= 2 && data.company.size() <= 120 &&
+      data.location is string && data.location.size() >= 2 && data.location.size() <= 120 &&
+      data.deadline is string && data.deadline.size() >= 4 && data.deadline.size() <= 40 &&
+      data.category is string && data.category.size() >= 2 && data.category.size() <= 80 &&
+      data.salary is string && data.salary.size() >= 1 && data.salary.size() <= 80 &&
+      data.employmentType in ['Full-time', 'Part-time', 'Contract', 'Internship', 'Consultancy'] &&
+      data.description is string && data.description.size() >= 10 && data.description.size() <= 6000 &&
+      isOptionalString(data, 'externalUrl', 500) &&
+      isOptionalString(data, 'applyEmail', 160) &&
+      isOptionalString(data, 'logoUrl', 65536) &&
+      data.status in ['active', 'closed'] &&
+      data.featured is bool &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidTender(data) {
+      return data.keys().hasAll([
+        'title', 'organization', 'location', 'deadline', 'category',
+        'budget', 'referenceNo', 'description', 'status',
+        'featured', 'createdAt', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'title', 'organization', 'location', 'deadline', 'category',
+        'budget', 'referenceNo', 'description', 'externalUrl',
+        'applyEmail', 'logoUrl', 'status', 'featured', 'createdAt', 'updatedAt'
+      ]) &&
+      data.title is string && data.title.size() >= 2 && data.title.size() <= 180 &&
+      data.organization is string && data.organization.size() >= 2 && data.organization.size() <= 140 &&
+      data.location is string && data.location.size() >= 2 && data.location.size() <= 120 &&
+      data.deadline is string && data.deadline.size() >= 4 && data.deadline.size() <= 40 &&
+      data.category is string && data.category.size() >= 2 && data.category.size() <= 80 &&
+      data.budget is string && data.budget.size() >= 1 && data.budget.size() <= 80 &&
+      data.referenceNo is string && data.referenceNo.size() >= 2 && data.referenceNo.size() <= 60 &&
+      data.description is string && data.description.size() >= 10 && data.description.size() <= 6000 &&
+      isOptionalString(data, 'externalUrl', 500) &&
+      isOptionalString(data, 'applyEmail', 160) &&
+      isOptionalString(data, 'logoUrl', 65536) &&
+      data.status in ['open', 'awarded', 'closed'] &&
+      data.featured is bool &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidMarketplaceItem(data) {
+      return data.keys().hasAll([
+        'title', 'category', 'price', 'currency', 'description',
+        'inStock', 'featured', 'status', 'createdAt', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'title', 'category', 'price', 'currency', 'description',
+        'imageUrl', 'deliveryNote', 'inStock', 'featured', 'status',
+        'createdAt', 'updatedAt'
+      ]) &&
+      data.title is string && data.title.size() >= 2 && data.title.size() <= 140 &&
+      data.category in ['digital_good', 'book', 'ecommerce'] &&
+      (data.price is int || data.price is float) && data.price >= 0 && data.price <= 1000000 &&
+      data.currency is string && data.currency.size() >= 3 && data.currency.size() <= 6 &&
+      data.description is string && data.description.size() >= 10 && data.description.size() <= 4000 &&
+      isOptionalString(data, 'imageUrl', 500) &&
+      isOptionalString(data, 'deliveryNote', 200) &&
+      data.inStock is bool &&
+      data.featured is bool &&
+      data.status in ['published', 'draft'] &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidBlogPost(data) {
+      return data.keys().hasAll([
+        'title', 'slug', 'category', 'author', 'excerpt',
+        'content', 'readTime', 'status', 'createdAt', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'title', 'slug', 'category', 'author', 'excerpt',
+        'content', 'coverImage', 'readTime', 'status',
+        'createdAt', 'updatedAt'
+      ]) &&
+      data.title is string && data.title.size() >= 4 && data.title.size() <= 180 &&
+      data.slug is string && data.slug.size() >= 2 && data.slug.size() <= 140 && data.slug.matches('^[a-z0-9\\-]+$') &&
+      data.category is string && data.category.size() >= 2 && data.category.size() <= 80 &&
+      data.author is string && data.author.size() >= 2 && data.author.size() <= 100 &&
+      data.excerpt is string && data.excerpt.size() >= 10 && data.excerpt.size() <= 400 &&
+      data.content is string && data.content.size() >= 20 && data.content.size() <= 15000 &&
+      isOptionalString(data, 'coverImage', 500) &&
+      data.readTime is string && data.readTime.size() >= 2 && data.readTime.size() <= 30 &&
+      data.status in ['published', 'draft'] &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidSiteSettings(data) {
+      return data.keys().hasAll([
+        'brandName', 'tagline', 'email', 'phone', 'address',
+        'officeHours', 'aboutMission', 'aboutStory', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'brandName', 'tagline', 'email', 'phone', 'whatsapp',
+        'address', 'officeHours', 'aboutMission', 'aboutStory',
+        'footerNewsletterTitle', 'footerNewsletterSubtitle',
+        'footerAboutTitle', 'footerAboutText',
+        'footerCol2Title', 'footerCol2Links',
+        'footerCol3Title', 'footerCol3Links',
+        'footerCol4Title', 'footerCol4Links',
+        'footerConnectTitle',
+        'socialLinkedin', 'socialTwitter', 'socialFacebook', 'socialInstagram', 'socialYoutube',
+        'footerCopyright',
+        'homeHeroEyebrow', 'homeHeroTitle', 'homeHeroSubtitle', 'homeSearchPlaceholder',
+        'homeHeroImageUrl', 'homeHeroOverlayTitle', 'homeHeroOverlaySubtitle',
+        'siteLogoLightUrl', 'siteLogoDarkUrl', 'siteFaviconUrl', 'siteTheme',
+        'updatedAt'
+      ]) &&
+      data.brandName is string && data.brandName.size() >= 2 && data.brandName.size() <= 80 &&
+      data.tagline is string && data.tagline.size() >= 4 && data.tagline.size() <= 240 &&
+      data.email is string && data.email.size() >= 5 && data.email.size() <= 160 &&
+      data.phone is string && data.phone.size() >= 5 && data.phone.size() <= 40 &&
+      isOptionalString(data, 'whatsapp', 40) &&
+      data.address is string && data.address.size() >= 4 && data.address.size() <= 240 &&
+      data.officeHours is string && data.officeHours.size() >= 4 && data.officeHours.size() <= 120 &&
+      data.aboutMission is string && data.aboutMission.size() >= 10 && data.aboutMission.size() <= 2000 &&
+      data.aboutStory is string && data.aboutStory.size() >= 10 && data.aboutStory.size() <= 4000 &&
+      isOptionalString(data, 'footerNewsletterTitle', 120) &&
+      isOptionalString(data, 'footerNewsletterSubtitle', 240) &&
+      isOptionalString(data, 'footerAboutTitle', 80) &&
+      isOptionalString(data, 'footerAboutText', 500) &&
+      isOptionalString(data, 'footerCol2Title', 60) &&
+      isOptionalFooterLinks(data, 'footerCol2Links') &&
+      isOptionalString(data, 'footerCol3Title', 60) &&
+      isOptionalFooterLinks(data, 'footerCol3Links') &&
+      isOptionalString(data, 'footerCol4Title', 60) &&
+      isOptionalFooterLinks(data, 'footerCol4Links') &&
+      isOptionalString(data, 'footerConnectTitle', 60) &&
+      isOptionalString(data, 'socialLinkedin', 300) &&
+      isOptionalString(data, 'socialTwitter', 300) &&
+      isOptionalString(data, 'socialFacebook', 300) &&
+      isOptionalString(data, 'socialInstagram', 300) &&
+      isOptionalString(data, 'socialYoutube', 300) &&
+      isOptionalString(data, 'footerCopyright', 200) &&
+      isOptionalString(data, 'homeHeroEyebrow', 120) &&
+      isOptionalString(data, 'homeHeroTitle', 200) &&
+      isOptionalString(data, 'homeHeroSubtitle', 500) &&
+      isOptionalString(data, 'homeSearchPlaceholder', 120) &&
+      isOptionalString(data, 'homeHeroImageUrl', 262144) &&
+      isOptionalString(data, 'homeHeroOverlayTitle', 120) &&
+      isOptionalString(data, 'homeHeroOverlaySubtitle', 260) &&
+      isOptionalString(data, 'siteLogoLightUrl', 65536) &&
+      isOptionalString(data, 'siteLogoDarkUrl', 65536) &&
+      isOptionalString(data, 'siteFaviconUrl', 65536) &&
+      (!('siteTheme' in data) || data.siteTheme in ['classic', 'modern_bento', 'swiss_editorial']) &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidVisitorLead(data) {
+      return data.keys().hasAll(['fullName', 'phone', 'source', 'status', 'createdAt']) &&
+        data.keys().hasOnly([
+          'fullName', 'phone', 'location', 'email', 'higherEducation',
+          'source', 'itemId', 'itemTitle', 'message', 'status', 'createdAt'
+        ]) &&
+        data.fullName is string && data.fullName.size() >= 2 && data.fullName.size() <= 120 &&
+        data.phone is string && data.phone.size() >= 5 && data.phone.size() <= 32 &&
+        isOptionalString(data, 'location', 120) &&
+        isOptionalString(data, 'email', 160) &&
+        isOptionalString(data, 'higherEducation', 120) &&
+        data.source in ['contacts', 'marketplace'] &&
+        isOptionalString(data, 'itemId', 128) &&
+        isOptionalString(data, 'itemTitle', 160) &&
+        isOptionalString(data, 'message', 2000) &&
+        data.status in ['new', 'contacted'] &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidNewsletterSubscriber(data) {
+      return data.keys().hasAll(['email', 'source', 'createdAt']) &&
+        data.keys().hasOnly(['email', 'source', 'createdAt']) &&
+        data.email is string && data.email.size() >= 5 && data.email.size() <= 160 &&
+        data.source == 'footer' &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidAdminUser(data) {
+      return data.keys().hasAll(['email', 'role', 'permissions', 'status', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly([
+          'email', 'displayName', 'role', 'permissions', 'status',
+          'inviteId', 'invitedBy', 'createdAt', 'updatedAt'
+        ]) &&
+        data.email is string && data.email.size() >= 5 && data.email.size() <= 160 &&
+        isOptionalString(data, 'displayName', 80) &&
+        data.role in ['super_admin', 'editor', 'recruiter', 'moderator', 'custom', 'admin'] &&
+        isValidPermissionsList(data.permissions) &&
+        data.status in ['active', 'suspended'] &&
+        isOptionalString(data, 'inviteId', 128) &&
+        isOptionalString(data, 'invitedBy', 160) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidTeamInvite(data) {
+      return data.keys().hasAll(['email', 'role', 'permissions', 'status', 'invitedBy', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly([
+          'email', 'displayName', 'role', 'permissions', 'status',
+          'invitedBy', 'claimedUid', 'createdAt', 'updatedAt'
+        ]) &&
+        data.email is string && data.email.size() >= 5 && data.email.size() <= 160 &&
+        isOptionalString(data, 'displayName', 80) &&
+        data.role in ['super_admin', 'editor', 'recruiter', 'moderator', 'custom'] &&
+        isValidPermissionsList(data.permissions) &&
+        data.status in ['pending', 'claimed', 'revoked'] &&
+        data.invitedBy is string && data.invitedBy.size() >= 5 && data.invitedBy.size() <= 160 &&
+        isOptionalString(data, 'claimedUid', 128) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidAccessRequest(data) {
+      return data.keys().hasAll(['email', 'status', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['email', 'displayName', 'status', 'createdAt', 'updatedAt']) &&
+        data.email is string && data.email.size() >= 5 && data.email.size() <= 160 &&
+        isOptionalString(data, 'displayName', 80) &&
+        data.status in ['pending', 'approved', 'rejected'] &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function canSelfClaimPendingInvite(adminId, data) {
+      return isVerifiedUser() &&
+        request.auth.uid == adminId &&
+        data.email == request.auth.token.email &&
+        data.status == 'active' &&
+        'inviteId' in data &&
+        isValidId(data.inviteId) &&
+        exists(/databases/$(database)/documents/teamInvites/$(data.inviteId)) &&
+        get(/databases/$(database)/documents/teamInvites/$(data.inviteId)).data.email == request.auth.token.email &&
+        get(/databases/$(database)/documents/teamInvites/$(data.inviteId)).data.status == 'pending' &&
+        data.role == get(/databases/$(database)/documents/teamInvites/$(data.inviteId)).data.role &&
+        data.permissions == get(/databases/$(database)/documents/teamInvites/$(data.inviteId)).data.permissions &&
+        getAfter(/databases/$(database)/documents/teamInvites/$(data.inviteId)).data.status == 'claimed' &&
+        getAfter(/databases/$(database)/documents/teamInvites/$(data.inviteId)).data.claimedUid == request.auth.uid;
+    }
+
+    match /test/connection {
+      allow get: if true;
+      allow list, write: if false;
+    }
+
+    match /jobs/{jobId} {
+      allow get: if isValidId(jobId) && (resource == null || existing().status in ['active', 'closed'] || isActiveAdmin());
+      allow list: if resource.data.status in ['active', 'closed'] || isActiveAdmin();
+      allow create: if isValidId(jobId) && isValidJob(incoming()) && hasPermission('jobs') &&
+        incoming().createdAt == request.time && incoming().updatedAt == request.time;
+      allow update: if isValidId(jobId) && isValidJob(incoming()) && hasPermission('jobs') &&
+        incoming().createdAt == existing().createdAt && incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'title', 'company', 'location', 'deadline', 'category', 'salary',
+          'employmentType', 'description', 'externalUrl', 'applyEmail', 'logoUrl',
+          'status', 'featured', 'updatedAt'
+        ]);
+      allow delete: if isValidId(jobId) && hasPermission('jobs');
+    }
+
+    match /tenders/{tenderId} {
+      allow get: if isValidId(tenderId) && (resource == null || existing().status in ['open', 'awarded', 'closed'] || isActiveAdmin());
+      allow list: if resource.data.status in ['open', 'awarded', 'closed'] || isActiveAdmin();
+      allow create: if isValidId(tenderId) && isValidTender(incoming()) && hasPermission('tenders') &&
+        incoming().createdAt == request.time && incoming().updatedAt == request.time;
+      allow update: if isValidId(tenderId) && isValidTender(incoming()) && hasPermission('tenders') &&
+        incoming().createdAt == existing().createdAt && incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'title', 'organization', 'location', 'deadline', 'category', 'budget',
+          'referenceNo', 'description', 'externalUrl', 'applyEmail', 'logoUrl',
+          'status', 'featured', 'updatedAt'
+        ]);
+      allow delete: if isValidId(tenderId) && hasPermission('tenders');
+    }
+
+    match /marketplaceItems/{itemId} {
+      allow get: if isValidId(itemId) && (resource == null || existing().status == 'published' || isActiveAdmin());
+      allow list: if resource.data.status == 'published' || isActiveAdmin();
+      allow create: if isValidId(itemId) && isValidMarketplaceItem(incoming()) && hasPermission('marketplace') &&
+        incoming().createdAt == request.time && incoming().updatedAt == request.time;
+      allow update: if isValidId(itemId) && isValidMarketplaceItem(incoming()) && hasPermission('marketplace') &&
+        incoming().createdAt == existing().createdAt && incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'title', 'category', 'price', 'currency', 'description',
+          'imageUrl', 'deliveryNote', 'inStock', 'featured', 'status', 'updatedAt'
+        ]);
+      allow delete: if isValidId(itemId) && hasPermission('marketplace');
+    }
+
+    match /blogs/{blogId} {
+      allow get: if isValidId(blogId) && (resource == null || existing().status == 'published' || isActiveAdmin());
+      allow list: if resource.data.status == 'published' || isActiveAdmin();
+      allow create: if isValidId(blogId) && isValidBlogPost(incoming()) && hasPermission('blogs') &&
+        incoming().createdAt == request.time && incoming().updatedAt == request.time;
+      allow update: if isValidId(blogId) && isValidBlogPost(incoming()) && hasPermission('blogs') &&
+        incoming().createdAt == existing().createdAt && incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'title', 'slug', 'category', 'author', 'excerpt', 'content',
+          'coverImage', 'readTime', 'status', 'updatedAt'
+        ]);
+      allow delete: if isValidId(blogId) && hasPermission('blogs');
+    }
+
+    match /siteSettings/{settingId} {
+      allow get: if isValidId(settingId) && (settingId == 'public' || isActiveAdmin());
+      allow list: if isActiveAdmin();
+      allow create: if isValidId(settingId) && isValidSiteSettings(incoming()) &&
+        (hasPermission('contacts') || hasPermission('footer')) &&
+        incoming().updatedAt == request.time;
+      allow update: if isValidId(settingId) && isValidSiteSettings(incoming()) &&
+        incoming().updatedAt == request.time && (
+          (hasPermission('contacts') && incoming().diff(existing()).affectedKeys().hasOnly([
+            'brandName', 'tagline', 'email', 'phone', 'whatsapp',
+            'address', 'officeHours', 'aboutMission', 'aboutStory',
+            'homeHeroEyebrow', 'homeHeroTitle', 'homeHeroSubtitle', 'homeSearchPlaceholder',
+            'homeHeroImageUrl', 'homeHeroOverlayTitle', 'homeHeroOverlaySubtitle',
+            'siteLogoLightUrl', 'siteLogoDarkUrl', 'siteFaviconUrl', 'siteTheme',
+            'updatedAt'
+          ])) ||
+          (hasPermission('footer') && incoming().diff(existing()).affectedKeys().hasOnly([
+            'footerNewsletterTitle', 'footerNewsletterSubtitle',
+            'footerAboutTitle', 'footerAboutText',
+            'footerCol2Title', 'footerCol2Links',
+            'footerCol3Title', 'footerCol3Links',
+            'footerCol4Title', 'footerCol4Links',
+            'footerConnectTitle',
+            'socialLinkedin', 'socialTwitter', 'socialFacebook', 'socialInstagram', 'socialYoutube',
+            'footerCopyright', 'updatedAt'
+          ])) ||
+          (hasPermission('contacts') && hasPermission('footer') && incoming().diff(existing()).affectedKeys().hasOnly([
+            'brandName', 'tagline', 'email', 'phone', 'whatsapp',
+            'address', 'officeHours', 'aboutMission', 'aboutStory',
+            'homeHeroEyebrow', 'homeHeroTitle', 'homeHeroSubtitle', 'homeSearchPlaceholder',
+            'homeHeroImageUrl', 'homeHeroOverlayTitle', 'homeHeroOverlaySubtitle',
+            'siteLogoLightUrl', 'siteLogoDarkUrl', 'siteFaviconUrl', 'siteTheme',
+            'footerNewsletterTitle', 'footerNewsletterSubtitle',
+            'footerAboutTitle', 'footerAboutText',
+            'footerCol2Title', 'footerCol2Links',
+            'footerCol3Title', 'footerCol3Links',
+            'footerCol4Title', 'footerCol4Links',
+            'footerConnectTitle',
+            'socialLinkedin', 'socialTwitter', 'socialFacebook', 'socialInstagram', 'socialYoutube',
+            'footerCopyright', 'updatedAt'
+          ]))
+        );
+      allow delete: if isValidId(settingId) && isSuperAdmin();
+    }
+
+    match /visitorLeads/{leadId} {
+      allow get: if isValidId(leadId) && hasPermission('leads');
+      allow list: if hasPermission('leads');
+      allow create: if isValidId(leadId) && isValidVisitorLead(incoming()) &&
+        incoming().status == 'new' && incoming().createdAt == request.time;
+      allow update: if isValidId(leadId) && isValidVisitorLead(incoming()) && hasPermission('leads') &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['status', 'message']);
+      allow delete: if isValidId(leadId) && hasPermission('leads');
+    }
+
+    match /newsletterSubscribers/{subId} {
+      allow get: if isValidId(subId) && hasPermission('newsletter');
+      allow list: if hasPermission('newsletter');
+      allow create: if isValidId(subId) && isValidNewsletterSubscriber(incoming()) &&
+        incoming().createdAt == request.time;
+      allow update: if false;
+      allow delete: if isValidId(subId) && hasPermission('newsletter');
+    }
+
+    match /admins/{adminId} {
+      allow get: if isValidId(adminId) && (isTeamManager() || (isVerifiedUser() && request.auth.uid == adminId));
+      allow list: if isTeamManager();
+      allow create: if isValidId(adminId) && isValidAdminUser(incoming()) &&
+        incoming().createdAt == request.time && incoming().updatedAt == request.time &&
+        ((isTeamManager() && canAssignRole(incoming().role, incoming().permissions)) ||
+          canSelfClaimPendingInvite(adminId, incoming()));
+      allow update: if isValidId(adminId) && isValidAdminUser(incoming()) && isTeamManager() &&
+        canAssignRole(incoming().role, incoming().permissions) &&
+        (existing().email != 'akrooble@gmail.com' || isVerifiedBootstrapAdmin()) &&
+        incoming().createdAt == existing().createdAt && incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'role', 'permissions', 'status', 'updatedAt']);
+      allow delete: if isValidId(adminId) && isTeamManager() && existing().email != 'akrooble@gmail.com';
+    }
+
+    match /teamInvites/{inviteId} {
+      allow get: if isValidId(inviteId) && (
+        isTeamManager() ||
+        (isVerifiedUser() && (resource == null || existing().email == request.auth.token.email))
+      );
+      allow list: if isTeamManager();
+      allow create: if isValidId(inviteId) && isValidTeamInvite(incoming()) && isTeamManager() &&
+        canAssignRole(incoming().role, incoming().permissions) &&
+        incoming().status == 'pending' &&
+        incoming().createdAt == request.time && incoming().updatedAt == request.time;
+      allow update: if isValidId(inviteId) && isValidTeamInvite(incoming()) &&
+        incoming().createdAt == existing().createdAt && incoming().updatedAt == request.time && (
+          (isTeamManager() && canAssignRole(incoming().role, incoming().permissions) &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'role', 'permissions', 'status', 'invitedBy', 'updatedAt'])) ||
+          (isVerifiedUser() && existing().status == 'pending' && existing().email == request.auth.token.email &&
+            incoming().status == 'claimed' && incoming().claimedUid == request.auth.uid &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['status', 'claimedUid', 'updatedAt']))
+        );
+      allow delete: if isValidId(inviteId) && isTeamManager();
+    }
+
+    match /accessRequests/{requestId} {
+      allow get: if isValidId(requestId) && (isTeamManager() || (isVerifiedUser() && request.auth.uid == requestId));
+      allow list: if isTeamManager();
+      allow create: if isValidId(requestId) && isValidAccessRequest(incoming()) &&
+        isVerifiedUser() && request.auth.uid == requestId &&
+        incoming().email == request.auth.token.email &&
+        incoming().status == 'pending' &&
+        incoming().createdAt == request.time && incoming().updatedAt == request.time;
+      allow update: if isValidId(requestId) && isValidAccessRequest(incoming()) &&
+        incoming().createdAt == existing().createdAt && incoming().updatedAt == request.time && (
+          (isTeamManager() && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt'])) ||
+          (isVerifiedUser() && request.auth.uid == requestId &&
+            incoming().email == request.auth.token.email &&
+            incoming().status == 'pending' &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'status', 'updatedAt']))
+        );
+      allow delete: if isValidId(requestId) && isTeamManager();
+    }
+  }
+}

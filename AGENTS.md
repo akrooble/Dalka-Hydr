@@ -16,13 +16,14 @@ No phase of the mandatory lifecycle may be silently skipped:
 
 ## 1. Product Mission & Repository Architecture
 
-- **Product Mission:** Currently **UNSPECIFIED** (greenfield workspace awaiting user definition for the new project). Update this section once the user defines the product scope.
+- **Product Mission:** **Dalka Jobs** — a unified three-phase platform (Phase 1: Public Website; Phase 2: Admin Panel; Phase 3: Mobile App) sharing one Firebase database for jobs, institutional tenders, digital/book marketplace, blogs, and visitor lead capture.
 - **Current Architecture (Verified):**
-  - Single-page React client entry: `index.html` -> `src/main.tsx` -> `src/App.tsx` (currently an empty `<div></div>` placeholder).
-  - Styling entry: `src/index.css` using Tailwind CSS v4 (`@import "tailwindcss";`).
-  - Build configuration: `vite.config.ts` with `@vitejs/plugin-react`, `@tailwindcss/vite`, `@/*` path alias mapped to `./*`, HMR controlled via `DISABLE_HMR`, and a `closeBundle` hook copying `src/assets` to `dist/src/assets`.
-  - Backend / Database / Auth: **Not yet implemented.** `express` and `@google/genai` are present in `package.json`, and `metadata.json` declares `MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API`, indicating readiness for a `server.ts` Express entry point if backend or AI routes are added.
-  - Static assets: `public/assets/` exists.
+  - Single-page React 19 client entry: `index.html` -> `src/main.tsx` (with Workbox `registerSW`) -> `src/App.tsx` (React Router across `/`, `/jobs`, `/tenders`, `/marketplace`, `/blogs`, `/contacts`, `/about`, and `/admin/*`).
+  - Phase 2 Admin Panel: `/admin/*` (`src/pages/AdminPage.tsx`, `src/admin/*`) gated by Google Sign-In (`akrooble@gmail.com`) for CRUD over jobs, tenders, marketplace items, blogs, site settings, and visitor leads.
+  - Phase 3 Mobile App (PWA): `vite-plugin-pwa` in `vite.config.ts` generating `manifest.webmanifest` + `sw.js`, `public/{pwa-192x192.png,pwa-512x512.png,pwa-maskable-512x512.png,apple-touch-icon.png,icon.svg}`, Firestore `persistentLocalCache` offline caching, `MobileBottomNav`, `PWAInstallButton`, `OfflineIndicator`, and mobile slide-up detail sheets on `/jobs` and `/tenders`.
+  - Styling entry: `src/index.css` using Tailwind CSS v4 (`@import "tailwindcss";`) and Stitch light-mode tokens (`#4648D4` / `#6366F1` primary indigo, `#F8F9FF` canvas, `#0B1C30` ink).
+  - Backend / Database / Auth: **Firebase Firestore + Firebase Auth** initialized in `src/lib/firebase.ts` from `firebase-applet-config.json`, schema in `firebase-blueprint.json`, security rules in `firestore.rules` (admin bootstrapped to verified `akrooble@gmail.com`).
+  - Static assets: `public/assets/aistudio/` (logos) and `src/assets/images/` (generated visuals copied to `dist/src/assets` on build).
 
 ## 2. Technology Stack (From `package.json`, `tsconfig.json`, `vite.config.ts`)
 
@@ -81,7 +82,7 @@ Available scripts in `package.json`:
 
 - Store every written task specification in `tasks/specs/` per `TASK_SPEC.md`.
 - Maintain concise execution status without duplicating rules across files.
-- **Git State:** This directory is currently **not** a Git repository (no `.git` folder or branches). Do not run destructive Git commands, and never commit, push, merge, or deploy without explicit user authorization.
+- **Git State:** Local Git repository initialized on `main` (`.git/` present, no remote configured yet). Do not run destructive Git commands, and never commit, push, merge, or deploy without explicit user authorization.
 
 ## 10. Cost-Efficient AI Operating Rules & Delegation
 
